@@ -1,0 +1,637 @@
+<title>Venom Aid</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-app shell — royal-blue header with rounded content panel, icon-tile dashboard, list cards, curved tab bar with a center scan button */
+:root{
+  --bg:#e9eefc; --panel:#f2f5fe; --card:#ffffff; --ink:#1d1f4d; --muted:#7a7f9e; --line:#e1e6f6;
+  --brand:#1712c4; --brand-2:#0c0aa6; --sky:#58b9f6; --on-brand:#ffffff;
+  --ic:#2b2a8c; --pink:#f590ac; --yellow:#ffc24f; --mint:#9fe1c4; --lav:#c9c8ff;
+  --good:#22a86b; --high:#e0364a; --high-bg:#fde6ea; --mid:#e08a00; --mid-bg:#fff2d9; --low:#22a86b; --low-bg:#ddf5ea;
+  --shadow:0 10px 24px -14px rgba(31,32,120,.35);
+  --f:"Prompt",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0d24; --panel:#14163a; --card:#1c1f4a; --ink:#eceeff; --muted:#a3a7cc; --line:#2a2e62;
+  --brand:#3d38f0; --brand-2:#2420c8; --sky:#5fc0ff; --on-brand:#ffffff;
+  --ic:#c9c8ff; --pink:#f590ac; --yellow:#ffc24f; --mint:#7fd3b0; --lav:#5a58c8;
+  --good:#4fd696; --high:#ff6b7c; --high-bg:#3d1624; --mid:#ffb74a; --mid-bg:#3a2a10; --low:#4fd696; --low-bg:#143326;
+  --shadow:0 10px 24px -14px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c0d24; --panel:#14163a; --card:#1c1f4a; --ink:#eceeff; --muted:#a3a7cc; --line:#2a2e62;
+  --brand:#3d38f0; --brand-2:#2420c8; --sky:#5fc0ff; --on-brand:#ffffff;
+  --ic:#c9c8ff; --pink:#f590ac; --yellow:#ffc24f; --mint:#7fd3b0; --lav:#5a58c8;
+  --good:#4fd696; --high:#ff6b7c; --high-bg:#3d1624; --mid:#ffb74a; --mid-bg:#3a2a10; --low:#4fd696; --low-bg:#143326;
+  --shadow:0 10px 24px -14px rgba(0,0,0,.7); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--brand)}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{text-wrap:balance;line-height:1.3;font-weight:600}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+svg{display:block}
+
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--panel);position:relative;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.view{display:flex;flex-direction:column}
+.pad{padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:var(--brand);color:var(--on-brand);padding-block:22px 64px}
+.hero::after{content:"";position:absolute;top:-40px;right:-60px;width:260px;height:300px;background:var(--brand-2);transform:skewX(-22deg);opacity:.9}
+.hero>*{position:relative;z-index:1}
+.hero-top{display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;opacity:.95}
+.logo i{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.sos-btn{border:0;background:#fff;color:#e0364a;font-weight:700;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.4)}
+.hero h1{font-size:clamp(34px,10vw,42px);font-weight:700;letter-spacing:-.01em;line-height:1.15;margin-top:26px}
+.fang{display:flex;gap:10px;margin-top:14px}.fang i{width:10px;height:10px;border-radius:50%;background:var(--pink);box-shadow:0 0 0 5px rgba(245,144,172,.25)}
+.hero p{opacity:.8;font-size:14px;margin-top:2px}
+
+.sheet-top{background:var(--panel);border-radius:28px 28px 0 0;margin-top:-36px;position:relative;z-index:2;padding-block:24px 8px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tile{border:0;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;text-align:center;min-height:142px;justify-content:center;transition:transform .15s}
+.tile:active{transform:scale(.98)}
+.tile svg{width:66px;height:66px}
+.tile span{font-size:14px;color:var(--muted);font-weight:500}
+.tile.sos span{color:var(--high)}
+
+.tip{margin-top:20px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:16px;display:flex;gap:14px;align-items:flex-start}
+.tip .dot{flex:none;width:40px;height:40px;border-radius:12px;background:var(--high-bg);color:var(--high);display:grid;place-items:center;font-weight:700}
+.tip h3{font-size:15px}
+.tip p{font-size:14px;color:var(--muted)}
+
+/* app bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--panel);display:flex;align-items:center;gap:12px;padding-block:14px}
+.icon-btn{border:0;background:var(--card);width:42px;height:42px;border-radius:14px;display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);flex:none;color:var(--ic)}
+.bar h2{font-size:19px;flex:1;min-width:0}
+.search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:0 14px;height:44px;box-shadow:var(--shadow);min-width:0;color:var(--muted)}
+.search input{border:0;background:transparent;outline:0;flex:1;min-width:0;color:var(--ink)}
+
+/* cards */
+.stack{display:flex;flex-direction:column;gap:16px;padding-block:6px 20px}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+.card-h{display:flex;align-items:center;gap:10px}
+.num{width:28px;height:28px;border-radius:9px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;font-size:14px;font-weight:600;flex:none}
+.card-h h3{font-size:16px}
+.hint{font-size:13px;color:var(--muted)}
+
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shot{position:relative;border:2px dashed var(--line);border-radius:16px;background:var(--panel);aspect-ratio:1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden;text-align:center;padding:8px}
+.shot:hover{border-color:var(--sky)}
+.shot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shot svg{width:48px;height:48px}
+.shot b{font-size:14px;font-weight:500}
+.shot small{font-size:12px;color:var(--muted)}
+.shot .x{position:absolute;top:8px;right:8px;z-index:2;border:0;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;width:30px;height:30px;cursor:pointer}
+
+textarea,select{width:100%;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:12px 14px}
+textarea{min-height:100px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:inline-block;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;user-select:none;background:var(--panel);border:1.5px solid var(--line)}
+.chip input:checked+span{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.chip.danger span{border-color:var(--high-bg)}
+.chip.danger input:checked+span{background:var(--high);border-color:var(--high);color:#fff}
+.chip input:focus-visible+span{outline:3px solid var(--sky);outline-offset:2px}
+
+.alert{border-radius:16px;padding:14px 16px;background:var(--high);color:#fff;display:flex;gap:12px;align-items:center}
+.alert b{display:block}
+.alert a{color:#fff;font-weight:700}
+
+.cta{border:0;width:100%;border-radius:18px;padding:16px;background:var(--brand);color:var(--on-brand);font-weight:600;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 12px 24px -12px var(--brand)}
+.cta:disabled{opacity:.6;cursor:wait}
+.ghost{border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px;align-self:center}
+.status{font-size:14px;color:var(--muted);text-align:center}
+
+/* urgency banner (like the Nearby Location bar) */
+.urg{border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;color:#fff;font-weight:600}
+.urg.high{background:var(--high)} .urg.mid{background:var(--mid)} .urg.low{background:var(--good)}
+.urg small{display:block;font-weight:400;opacity:.9;font-size:13px}
+.ex{align-self:flex-start;background:var(--yellow);color:#3b2a00;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600}
+
+/* list cards (like mechanic list) */
+.list{display:flex;flex-direction:column;gap:14px}
+.item{border:0;width:100%;text-align:left;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:center;cursor:pointer}
+.ava{grid-row:span 2;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--panel)}
+.ava svg{width:34px;height:34px}
+.item .nm{font-size:16px;font-weight:500;min-width:0}
+.item .meta{font-size:13px;color:var(--muted);min-width:0}
+.item .pct{color:var(--good);font-weight:600;font-variant-numeric:tabular-nums}
+.badge{grid-row:span 2;font-size:11px;font-weight:600;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.badge.high{background:var(--high-bg);color:var(--high)} .badge.mid{background:var(--mid-bg);color:var(--mid)} .badge.low{background:var(--low-bg);color:var(--low)}
+.meter{grid-column:2/-1;height:6px;border-radius:3px;background:var(--panel);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--good);border-radius:3px;transform-origin:left;animation:fill .7s cubic-bezier(.2,.8,.2,1) both}
+.list .item:nth-child(2) .meter i{animation-delay:.12s}.list .item:nth-child(3) .meter i{animation-delay:.24s}.list .item:nth-child(4) .meter i{animation-delay:.36s}
+@keyframes fill{from{transform:scaleX(0)}}
+
+/* accordions (like Inventory / Workplace) */
+.acc{border-radius:22px;overflow:hidden;box-shadow:var(--shadow);background:var(--card)}
+.acc summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:center;gap:10px;font-weight:600}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary .chev{margin-left:auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.35);display:grid;place-items:center;transition:transform .2s}
+.acc[open] summary .chev{transform:rotate(180deg)}
+.acc.do summary{background:var(--good);color:#fff}
+.acc.dont summary{background:var(--high);color:#fff}
+.acc.flags summary{background:var(--yellow);color:#3b2a00}
+.acc ul{margin:0;padding:14px 18px 16px 36px;display:flex;flex-direction:column;gap:6px}
+
+.doc{background:var(--panel);border-radius:14px;padding:14px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.small-btn{border:0;background:var(--panel);color:var(--brand);font-weight:600;border-radius:12px;padding:10px 14px;cursor:pointer;align-self:flex-end}
+:root[data-theme="dark"] .small-btn{color:var(--ic)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .small-btn{color:var(--ic)}}
+.disc{font-size:12px;color:var(--muted);text-align:center;padding-inline:8px}
+
+/* filter row */
+.filters{display:flex;gap:8px;overflow-x:auto;padding-block:4px 10px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters .chip span{white-space:nowrap;background:var(--card);border-color:var(--card);box-shadow:var(--shadow)}
+
+.sources{font-size:13px;color:var(--muted)}
+.sources ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+a{color:var(--brand)}
+:root[data-theme="dark"] a{color:var(--sky)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) a{color:var(--sky)}}
+
+/* bottom sheets */
+.scrim{position:fixed;inset:0;background:rgba(10,12,40,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);width:100%;max-width:480px;max-height:88vh;overflow:auto;border-radius:28px 28px 0 0;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:10px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.grab{width:44px;height:5px;border-radius:3px;background:var(--line);align-self:center;margin-bottom:4px}
+.sheet h2{font-size:21px}
+.kv{display:flex;flex-direction:column;gap:2px}
+.kv b{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+.call{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+.call .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;user-select:all}
+.call .l{font-size:13px;color:var(--muted)}
+.call .acts{margin-left:auto;display:flex;gap:8px}
+.call a,.call button{border:0;border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+.call a{background:var(--high);color:#fff}
+.call button{background:var(--panel);color:var(--ink)}
+
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;pointer-events:none}
+.tabbar-in{position:relative;width:100%;max-width:480px;height:calc(84px + env(safe-area-inset-bottom,0px));pointer-events:auto}
+.tabbar svg.wave{position:absolute;inset:auto 0 0 0;width:100%;height:84px}
+.tabbar .fill{position:absolute;left:0;right:0;bottom:0;height:env(safe-area-inset-bottom,0px);background:var(--brand)}
+.tabbar .tab{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));border:0;background:none;color:rgba(255,255,255,.65);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;cursor:pointer;width:72px}
+.tabbar .tab[aria-current="page"]{color:#fff}
+.tabbar .t-home{left:max(18px,env(safe-area-inset-left,0px))}
+.tabbar .t-guide{right:max(18px,env(safe-area-inset-right,0px))}
+.fab{position:absolute;left:50%;top:-26px;transform:translateX(-50%);width:72px;height:72px;border-radius:50%;border:6px solid var(--panel);background:var(--sky);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 20px -8px rgba(40,140,220,.7)}
+.fab-l{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));color:#fff;font-size:11px;pointer-events:none}
+
+/* illustrated icons */
+.s{fill:none;stroke:var(--ic);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.fp{fill:var(--pink)} .fy{fill:var(--yellow)} .fs{fill:var(--sky)} .fm{fill:var(--mint)} .fl{fill:var(--lav)} .fc{fill:var(--card)} .fi{fill:var(--ic)}
+.ico{display:block}
+@media (max-width:360px){.tiles{gap:12px}.tile{min-height:128px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <!-- HOME -->
+  <section class="view" id="v-home" aria-label="หน้าแรก">
+    <header class="hero pad">
+      <div class="hero-top">
+        <div class="logo"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 3c3 0 5 2 5 4.5S15 11 12 11s-5 1.5-5 4 2 4.5 5 4.5"/><path d="M12 19.5v2"/></svg></i>Venom Aid</div>
+        <button type="button" class="sos-btn" data-open="sos"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>SOS</button>
+      </div>
+      <h1>โดนอะไรกัด?</h1>
+      <p>ถ่ายรูปแผลหรือเล่าอาการ AI จะช่วยบอกว่าน่าจะเป็นอะไร</p>
+      <div class="fang" aria-hidden="true"><i></i><i></i></div>
+    </header>
+    <div class="sheet-top pad">
+      <div class="tiles" id="tiles"></div>
+      <div class="tip">
+        <div class="dot">!</div>
+        <div><h3>ถ้าโดนงูกัด ห้ามทำ</h3><p>ห้ามขันชะเนาะ กรีด ดูด หรือเผาแผล ให้อยู่นิ่งแล้วไปโรงพยาบาล</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECK -->
+  <section class="view pad" id="v-check" hidden aria-label="ตรวจแผล">
+    <div class="bar"><button type="button" class="icon-btn" data-go="home" aria-label="กลับหน้าแรก"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2>ตรวจแผล</h2></div>
+    <div class="stack">
+      <div class="card">
+        <div class="card-h"><span class="num">1</span><h3>ถ่ายรูป</h3></div>
+        <div class="shots">
+          <label class="shot" id="shot-wound"><input type="file" id="f-wound" accept="image/*" capture="environment" aria-label="รูปแผล"><span class="ico" data-ic="wound"></span><b>รูปแผล</b><small>แตะเพื่อถ่าย</small></label>
+          <label class="shot" id="shot-animal"><input type="file" id="f-animal" accept="image/*" capture="environment" aria-label="รูปสัตว์ที่กัด"><span class="ico" data-ic="snake"></span><b>รูปสัตว์</b><small>ถ้ามี ถ่ายจากระยะปลอดภัย</small></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="num">2</span><h3>เล่าสิ่งที่เห็น</h3></div>
+        <textarea id="desc" aria-label="คำอธิบาย" placeholder="เช่น งูสีเขียว หางแดง กัดที่ข้อเท้าตอนเดินในสวน"></textarea>
+        <div class="row2">
+          <label class="f" for="when">โดนกัดเมื่อไหร่
+            <select id="when"><option value="">ไม่ระบุ</option><option>ไม่ถึง 30 นาที</option><option>30 นาที – 2 ชั่วโมง</option><option>2 – 6 ชั่วโมง</option><option>มากกว่า 6 ชั่วโมง</option></select></label>
+          <label class="f" for="where">ที่ไหน
+            <select id="where"><option value="">ไม่ระบุ</option><option>ในบ้าน/ที่นอน</option><option>สวน/ไร่/นา</option><option>ป่า/ภูเขา</option><option>ทะเล/ชายหาด</option><option>แหล่งน้ำจืด</option><option>ในเมือง/ถนน</option></select></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="num">3</span><h3>อาการตอนนี้</h3></div>
+        <p class="hint">เลือกได้หลายข้อ กรอบสีแดงคืออาการอันตราย</p>
+        <div class="chips" id="symptoms"></div>
+      </div>
+      <div class="alert" id="redflag" hidden><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><div><b>อาการอันตราย</b>โทร 1669 หรือไปโรงพยาบาลทันที</div></div>
+      <button type="button" class="cta" id="analyze"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3.5"/></svg>วิเคราะห์ด้วย AI</button>
+      <p class="status" id="status" aria-live="polite"></p>
+      <button type="button" class="ghost" id="reset">ล้างข้อมูลทั้งหมด</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="view pad" id="v-result" hidden aria-label="ผลการประเมิน">
+    <div class="bar"><button type="button" class="icon-btn" data-go="home" aria-label="กลับหน้าแรก"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2>ผลการประเมิน</h2></div>
+    <div class="stack" id="result" aria-live="polite"></div>
+  </section>
+
+  <!-- GUIDE -->
+  <section class="view pad" id="v-guide" hidden aria-label="คู่มือสัตว์มีพิษ">
+    <div class="bar">
+      <label class="search" for="q"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="ค้นหาสัตว์มีพิษ"></label>
+    </div>
+    <div class="filters" id="gfilter" role="radiogroup" aria-label="กลุ่มสัตว์"></div>
+    <div class="list" id="guide"></div>
+    <div class="card sources" style="margin-block:18px">
+      <b style="color:var(--ink)">แหล่งอ้างอิง</b>
+      <ul id="srclist"></ul>
+      <p>ข้อมูลใช้ปฐมพยาบาลเบื้องต้นเท่านั้น การรักษาต้องให้แพทย์ตัดสิน</p>
+    </div>
+  </section>
+</div>
+
+<!-- tab bar -->
+<nav class="tabbar" aria-label="เมนูหลัก">
+  <div class="tabbar-in">
+    <svg class="wave" viewBox="0 0 480 84" preserveAspectRatio="none" aria-hidden="true"><path style="fill:var(--brand)" d="M0 24 Q0 0 24 0 H150 C180 0 188 8 196 22 C210 48 225 56 240 56 C255 56 270 48 284 22 C292 8 300 0 330 0 H456 Q480 0 480 24 V84 H0 Z"/></svg>
+    <div class="fill"></div>
+    <button type="button" class="tab t-home" data-go="home" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>หน้าแรก</button>
+    <button type="button" class="fab" data-go="check" aria-label="ตรวจแผล"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3.5"/></svg></button>
+    <span class="fab-l">ตรวจแผล</span>
+    <button type="button" class="tab t-guide" data-go="guide"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 1h13v-3"/></svg>คู่มือ</button>
+  </div>
+</nav>
+
+<!-- sheets -->
+<div class="scrim" id="sh-sos" hidden role="dialog" aria-modal="true" aria-label="เบอร์ฉุกเฉิน">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>เบอร์ฉุกเฉิน</h2>
+    <div class="call"><div><div class="n">1669</div><div class="l">การแพทย์ฉุกเฉิน รถพยาบาล</div></div><div class="acts"><a href="tel:1669">โทร</a><button type="button" data-copy="1669">คัดลอก</button></div></div>
+    <div class="call"><div><div class="n">1367</div><div class="l">ศูนย์พิษวิทยา รพ.รามาธิบดี</div></div><div class="acts"><a href="tel:1367">โทร</a><button type="button" data-copy="1367">คัดลอก</button></div></div>
+    <div class="call"><div><div class="n">1422</div><div class="l">สายด่วนกรมควบคุมโรค</div></div><div class="acts"><a href="tel:1422">โทร</a><button type="button" data-copy="1422">คัดลอก</button></div></div>
+    <p class="hint">ถ้าปุ่มโทรไม่ทำงาน ให้กดเบอร์เองจากโทรศัพท์</p>
+    <button type="button" class="small-btn" data-close style="align-self:stretch">ปิด</button>
+  </div>
+</div>
+<div class="scrim" id="sh-detail" hidden role="dialog" aria-modal="true" aria-labelledby="d-title">
+  <div class="sheet" id="detail"></div>
+</div>
+
+<script>
+const SYMPTOMS = [
+  ["ปวดมาก",0],["บวมแดง",0],["บวมลามเร็ว",1],["มีรอยเขี้ยว 2 จุด",0],["ตุ่มน้ำ/พุพอง",0],["คัน/ผื่น",0],
+  ["ชา/อ่อนแรง",1],["หนังตาตก",1],["กลืนลำบาก/พูดไม่ชัด",1],["หายใจลำบาก",1],
+  ["เลือดออกไม่หยุด/เลือดออกตามไรฟัน",1],["ปัสสาวะสีเข้ม",1],["คลื่นไส้/อาเจียน",0],["เวียนหัว/ใจสั่น",0],["หน้าบวม ปากบวม ลมพิษทั้งตัว",1]
+];
+
+/* แหล่งอ้างอิงการปฐมพยาบาล */
+const SRC = {
+  snake:{t:"ไทยรัฐ: ผู้เชี่ยวชาญงูแนะ 7 วิธีปฐมพยาบาลเมื่อถูกงูพิษกัด",u:"https://www.thairath.co.th/news/society/1508960"},
+  snake2:{t:"Thai PBS: 4 ข้อห้ามเมื่อถูกงูกัด",u:"https://www.thaipbs.or.th/news/content/280457"},
+  jelly:{t:"Thai PBS: ทช. แนะวิธีปฐมพยาบาลพิษแมงกะพรุนกล่อง",u:"https://www.thaipbs.or.th/news/content/508989"},
+  fish:{t:"WebMD: Scorpionfish, Lionfish, Stonefish Poisoning",u:"https://www.webmd.com/first-aid/wilderness-scorpionfish-lionfish-stonefish-poisoning"},
+  arthro:{t:"HDmall: ตะขาบกัด แมงป่องต่อย ดูแลอย่างไร",u:"https://hdmall.co.th/blog/faq/centipede-bites-scopion-stings-treatment/"},
+  bee:{t:"HDmall: ปฐมพยาบาลเมื่อโดนผึ้งต่อย",u:"https://hdmall.co.th/blog/health/first-aid-when-hit-by-a-bee-sting/"},
+  rove:{t:"มติชน: กรมควบคุมโรคแนะวิธีรับมือแมลงก้นกระดก",u:"https://www.matichon.co.th/publicize/news_1050659"},
+};
+const WIKI = t => "https://th.wikipedia.org/wiki/" + encodeURIComponent(t);
+const SNAKE_AID = "ถือว่าเป็นงูพิษไว้ก่อน ล้างแผลด้วยน้ำสะอาด ให้อยู่นิ่ง ดามแขนขาข้างที่โดนกัด ถอดแหวนหรือกำไล ค่อยๆ ไปโรงพยาบาล ห้ามวิ่ง ถ่ายรูปงูจากระยะปลอดภัยถ้าทำได้";
+
+/* ข้อมูลอ้างอิงจากวิกิพีเดีย หมวดหมู่:สัตว์มีพิษ และแหล่งปฐมพยาบาลใน SRC */
+const GUIDE = [
+  {id:"cobra",g:"งู",th:"งูเห่าไทย (งูเห่าหม้อ)",en:"Monocled cobra",sci:"Naja kaouthia",s:"high",k:"พิษต่อระบบประสาท",how:"กัด",
+   look:"แผ่แม่เบี้ย หลังคอมีดอกจันรูปตัว O ตัวสีดำ น้ำตาล เขียว หรือสีนวล",sign:"ปวดบวมรอบแผล หนังตาตก กลืนลำบาก พูดไม่ชัด หายใจลำบาก",aid:SNAKE_AID,wiki:"งูเห่าหม้อ",src:["snake","snake2"]},
+  {id:"spitting",g:"งู",th:"งูเห่าพ่นพิษสยาม",en:"Siamese spitting cobra",sci:"Naja siamensis",s:"high",k:"พิษต่อระบบประสาท พ่นพิษเข้าตาได้",how:"กัด / พ่นพิษ",
+   look:"แผ่แม่เบี้ยแล้วอ้าปากพ่นพิษได้ไกลราว 1–2 เมตร",sign:"ถ้าพิษเข้าตา แสบตา ตาแดง ถ้าถูกกัดมีอาการแบบงูเห่า",aid:"ถ้าพิษเข้าตา ล้างตาด้วยน้ำสะอาดปริมาณมาก ห้ามขยี้ตา แล้วไปพบแพทย์ ถ้าถูกกัดปฐมพยาบาลแบบงูพิษ",wiki:"งูเห่าพ่นพิษสยาม",src:["snake"]},
+  {id:"king",g:"งู",th:"งูจงอาง",en:"King cobra",sci:"Ophiophagus hannah",s:"high",k:"พิษต่อระบบประสาท",how:"กัด",
+   look:"ตัวใหญ่มาก ยาวเฉลี่ย 3.5–4.5 เมตร ชูคอสูงและแผ่แม่เบี้ยแคบยาว",sign:"อ่อนแรง หนังตาตก หายใจล้มเหลวได้เร็ว",aid:SNAKE_AID,wiki:"งูจงอาง",src:["snake","snake2"]},
+  {id:"banded",g:"งู",th:"งูสามเหลี่ยม",en:"Banded krait",sci:"Bungarus fasciatus",s:"high",k:"พิษต่อระบบประสาท",how:"กัด",
+   look:"ปล้องดำสลับเหลืองทั้งตัว ลำตัวเป็นสันสามเหลี่ยม หางทู่ ออกหากินกลางคืน",sign:"แผลอาจไม่ปวดไม่บวม แต่หลายชั่วโมงต่อมาหนังตาตก อ่อนแรง หายใจลำบาก",aid:SNAKE_AID+" ต้องไปโรงพยาบาลแม้ยังไม่มีอาการ",wiki:"งูสามเหลี่ยม",src:["snake"]},
+  {id:"krait",g:"งู",th:"งูทับสมิงคลา",en:"Malayan krait",sci:"Bungarus candidus",s:"high",k:"พิษต่อระบบประสาท",how:"กัด",
+   look:"ปล้องดำสลับขาว มักพบตอนกลางคืน บางครั้งเลื้อยเข้าบ้าน",sign:"แผลแทบไม่ปวด แต่ต่อมาอ่อนแรง หนังตาตก หายใจลำบาก",aid:SNAKE_AID+" ต้องไปโรงพยาบาลแม้ยังไม่มีอาการ",wiki:"งูทับสมิงคลา",src:["snake"]},
+  {id:"malayanpit",g:"งู",th:"งูกะปะ",en:"Malayan pit viper",sci:"Calloselasma rhodostoma",s:"high",k:"พิษต่อระบบเลือด",how:"กัด",
+   look:"หัวสามเหลี่ยม สีน้ำตาลอมแดง มีลายสามเหลี่ยมบนหลัง ชอบขดนิ่งตามกองใบไม้",sign:"ปวดบวมมาก มีตุ่มเลือด เลือดออกไม่หยุด",aid:SNAKE_AID,wiki:"งูกะปะ",src:["snake","snake2"]},
+  {id:"russell",g:"งู",th:"งูแมวเซา",en:"Siamese Russell's viper",sci:"Daboia siamensis",s:"high",k:"พิษต่อระบบเลือดและไต",how:"กัด",
+   look:"ลายวงรีสีน้ำตาลเข้มขอบดำเรียงตามตัว ขู่เสียงฟ่อดัง",sign:"ปวดบวม เลือดออกง่าย ปัสสาวะน้อยหรือสีเข้ม",aid:SNAKE_AID,wiki:"งูแมวเซา",src:["snake","snake2"]},
+  {id:"greenpit",g:"งู",th:"งูเขียวหางไหม้",en:"Green pit viper",sci:"Trimeresurus spp.",s:"mid",k:"พิษต่อระบบเลือด",how:"กัด",
+   look:"หัวสามเหลี่ยม ตัวเขียวอมเหลือง หางสีแดง",sign:"ปวด บวมแดง อาจมีเลือดออกผิดปกติ",aid:SNAKE_AID+" แพทย์อาจนัดตรวจเลือดซ้ำ",wiki:"งูเขียวหางไหม้",src:["snake"]},
+  {id:"seasnake",g:"งู",th:"งูทะเล",en:"Sea snakes",sci:"Hydrophiinae",s:"high",k:"พิษต่อกล้ามเนื้อและประสาท",how:"กัด",
+   look:"อยู่ในทะเลหรือปากแม่น้ำ หางแบนคล้ายใบพาย",sign:"แผลไม่ค่อยปวด ต่อมาปวดกล้ามเนื้อ อ่อนแรง ปัสสาวะสีน้ำตาลเข้ม",aid:"พาขึ้นจากน้ำ แล้ว"+SNAKE_AID,wiki:"งูทะเล",src:["snake"]},
+
+  {id:"bee",g:"แมลง",th:"ผึ้ง ต่อ แตน",en:"Bees, wasps, hornets",sci:"Hymenoptera",s:"mid",k:"แพ้รุนแรงได้",how:"ต่อย",
+   look:"ผึ้งทิ้งเหล็กในไว้ ต่อและแตนต่อยได้หลายครั้ง",sign:"ปวด บวมแดง คัน ถ้าลมพิษทั้งตัว คอหรือลิ้นบวม หายใจลำบาก คืออาการแพ้รุนแรง",aid:"เขี่ยเหล็กในออกด้วยขอบบัตร ล้างสบู่ ประคบเย็น ถ้าแพ้รุนแรงโทร 1669 ห้ามขับรถไปเอง",wiki:"ผึ้ง",src:["bee"]},
+  {id:"rove",g:"แมลง",th:"ด้วงก้นกระดก",en:"Rove beetle",sci:"Paederus fuscipes",s:"low",k:"สาร Paederin ระคายผิว",how:"สัมผัส",
+   look:"ยาว 7–10 มม. หัวดำ ตัวส้ม ปีกน้ำเงินเข้ม งอก้นขึ้นลง ชอบเล่นไฟหน้าฝน",sign:"ปวดแสบร้อน ผื่นแดง ตุ่มน้ำหรือหนอง",aid:"ห้ามตีหรือขยี้ ใช้กระดาษปัดออก ล้างน้ำและสบู่ ประคบเย็น ถ้าผื่นลามหรือพองให้พบแพทย์",wiki:"ด้วงก้นกระดก",src:["rove"]},
+
+  {id:"centipede",g:"แมงและตะขาบ",th:"ตะขาบ",en:"Giant centipede",sci:"Scolopendra subspinipes",s:"mid",k:"พิษเฉพาะที่",how:"กัด",
+   look:"ลำตัวแบนเป็นปล้อง ขาคู่ละปล้อง",sign:"รอยกัด 2 จุด ปวด บวมแดง",aid:"ล้างน้ำและสบู่ ประคบเย็นช่วง 48 ชั่วโมงแรก กินยาแก้ปวด พิจารณาวัคซีนบาดทะยัก",wiki:"ตะขาบ",src:["arthro"]},
+  {id:"scorpion",g:"แมงและตะขาบ",th:"แมงป่องช้าง",en:"Giant forest scorpion",sci:"Heterometrus spp.",s:"mid",k:"พิษเฉพาะที่",how:"ต่อย",
+   look:"ตัวดำขนาดใหญ่ ก้ามใหญ่ หางงอนมีเหล็กใน",sign:"ปวดแสบร้อน บวมแดง",aid:"ล้างน้ำและสบู่ ประคบเย็น กินยาแก้ปวด ถ้าแพ้รุนแรงหรือเป็นเด็กเล็กให้พบแพทย์",wiki:"แมงป่องช้าง",src:["arthro"]},
+
+  {id:"boxjelly",g:"สัตว์ทะเล",th:"แมงกะพรุนกล่อง (สาหร่ายทะเล)",en:"Box jellyfish",sci:"Chironex spp.",s:"high",k:"พิษต่อหัวใจและระบบประสาท",how:"สัมผัส",
+   look:"ตัวใสรูปกล่อง หนวดหลายเส้นยาวราว 1.5 เมตร พบในอ่าวไทยและอันดามัน",sign:"รอยไหม้เป็นเส้นตามหนวด ปวดรุนแรง แน่นหน้าอก หมดสติ หยุดหายใจได้",aid:"พาขึ้นจากน้ำ โทร 1669 ราดน้ำส้มสายชูอย่างน้อย 30 วินาที คีบหนวดออก ถ้าหยุดหายใจทำ CPR ห้ามใช้น้ำจืดหรือเหล้า ห้ามขยี้",wiki:"แมงกะพรุนสาหร่าย",src:["jelly"]},
+  {id:"firejelly",g:"สัตว์ทะเล",th:"แมงกะพรุนไฟ",en:"Sea nettle",sci:"Chrysaora spp.",s:"mid",k:"พิษต่อผิวหนัง",how:"สัมผัส",
+   look:"ร่มสีแดงหรือส้ม มีจุดขาวด้านบน หนวดยาวกว่าลำตัว",sign:"ผื่นแดงหรือรอยไหม้ตามรอยหนวด ปวดแสบร้อน",aid:"พาขึ้นจากน้ำ ราดน้ำส้มสายชู คีบหนวดออก ห้ามใช้น้ำจืด ห้ามขยี้",wiki:"แมงกะพรุนไฟ",src:["jelly"]},
+  {id:"stonefish",g:"สัตว์ทะเล",th:"ปลาหิน",en:"Stonefish",sci:"Synanceia spp.",s:"high",k:"พิษจากหนามครีบ",how:"เหยียบ / ตำ",
+   look:"ตัวป้อมสีคล้ำคล้ายก้อนหิน อยู่นิ่งตามพื้นทะเลและแนวปะการัง",sign:"ปวดรุนแรงมาก บวม",aid:"ขึ้นจากน้ำ แช่น้ำอุ่นจัดเท่าที่ทนได้ 30–90 นาที (ทดสอบด้วยมือข้างที่ไม่โดน) เอาหนามออก ไปโรงพยาบาลเพราะอาจต้องใช้เซรุ่ม",wiki:"ปลาหิน",src:["fish"]},
+  {id:"lionfish",g:"สัตว์ทะเล",th:"ปลาสิงโต",en:"Lionfish",sci:"Pterois spp.",s:"mid",k:"พิษจากหนามครีบ",how:"ตำ",
+   look:"ครีบยาวแผ่เป็นพู่ ลายแถบแดงขาว",sign:"ปวดมาก บวมแดง",aid:"แช่น้ำอุ่นจัดเท่าที่ทนได้ 30–90 นาที ล้างแผล พบแพทย์เพื่อตรวจเศษหนาม",wiki:"ปลาสิงโต",src:["fish"]},
+  {id:"catfish",g:"สัตว์ทะเล",th:"ปลาดุกทะเล",en:"Striped eel catfish",sci:"Plotosus lineatus",s:"mid",k:"พิษจากเงี่ยง",how:"ตำ",
+   look:"ตัวเรียวยาว มีหนวด ตัวเล็กมีแถบขาวเหลืองพาดลำตัว",sign:"ปวดมาก บวม",aid:"แช่น้ำอุ่นจัดเท่าที่ทนได้ ล้างแผล พบแพทย์เพื่อตรวจเศษเงี่ยง",wiki:"ปลาดุกทะเลลาย",src:["fish"]},
+  {id:"stingray",g:"สัตว์ทะเล",th:"ปลากระเบนธง",en:"Stingray",sci:"Myliobatoidei",s:"mid",k:"พิษจากเงี่ยงหาง",how:"แทง",
+   look:"ตัวแบน มีเงี่ยงแหลมที่หาง มักฝังตัวในทราย",sign:"แผลฉีกลึก เลือดออก ปวดมาก",aid:"กดห้ามเลือด แช่น้ำอุ่นจัดเท่าที่ทนได้ ไปโรงพยาบาลเพื่อล้างแผลและเอาเศษเงี่ยงออก",wiki:"ปลากระเบนธง",src:["fish"]},
+  {id:"octopus",g:"สัตว์ทะเล",th:"หมึกสายวงน้ำเงิน",en:"Blue-ringed octopus",sci:"Hapalochlaena spp.",s:"high",k:"พิษต่อระบบประสาท",how:"กัด",
+   look:"ตัวเล็ก มีวงแหวนสีน้ำเงินเรืองเมื่อถูกรบกวน",sign:"แผลเล็ก ไม่ค่อยปวด ชารอบปาก อ่อนแรง หยุดหายใจได้",aid:"โทร 1669 ทันที ถ้าหายใจไม่ได้ให้ช่วยหายใจหรือทำ CPR จนถึงโรงพยาบาล",wiki:"หมึกสายวงน้ำเงิน",src:[]},
+  {id:"cone",g:"สัตว์ทะเล",th:"หอยเต้าปูน",en:"Cone snail",sci:"Conus spp.",s:"high",k:"พิษต่อระบบประสาท",how:"เข็มพิษ",
+   look:"เปลือกรูปกรวย ลายสวยสีสด พบตามแนวปะการัง",sign:"ปวด ชา อ่อนแรง หายใจลำบาก",aid:"อย่าหยิบด้วยมือเปล่า ถ้าโดนให้อยู่นิ่ง โทร 1669",wiki:"หอยเต้าปูน",src:[]},
+  {id:"puffer",g:"สัตว์ทะเล",th:"ปลาปักเป้า",en:"Pufferfish",sci:"Tetraodontiformes",s:"high",k:"พิษเมื่อกิน (เทโทรโดท็อกซิน)",how:"กินเข้าไป",
+   look:"ตัวกลม พองตัวได้ บางชนิดมีหนาม",sign:"หลังกิน ชาปากและลิ้น อ่อนแรง หายใจลำบาก",aid:"โทร 1669 ทันที ถ้าหายใจไม่ได้ให้ช่วยหายใจหรือทำ CPR",wiki:"อันดับปลาปักเป้า",src:[]},
+
+  {id:"toad",g:"อื่นๆ",th:"คางคกบ้าน",en:"Asian common toad",sci:"Duttaphrynus melanostictus",s:"low",k:"ยางพิษจากต่อมหลังตา",how:"สัมผัส / กินเข้าไป",
+   look:"ผิวแห้ง ปุ่มปมทั้งตัว ต่อมพิษนูนหลังตา",sign:"ยางเข้าตาทำให้แสบตา ถ้ากินเข้าไปอาจมีผลต่อหัวใจ",aid:"ล้างด้วยน้ำสะอาดมากๆ ถ้ากินเข้าไปให้ไปโรงพยาบาลทันที",wiki:"คางคกบ้าน",src:[]},
+  {id:"loris",g:"อื่นๆ",th:"ลิงลม (นางอาย)",en:"Slow loris",sci:"Nycticebus spp.",s:"mid",k:"พิษจากต่อมที่ข้อศอกผสมน้ำลาย",how:"กัด",
+   look:"ไพรเมตตัวเล็ก ตาโต เคลื่อนไหวช้า",sign:"ปวด บวมที่แผล บางคนแพ้รุนแรง",aid:"ล้างแผล ถ้าบวมมาก หายใจลำบาก หรือลมพิษ ให้ไปโรงพยาบาล",wiki:"ลิงลม",src:[]},
+];
+
+const SEV_TH = {high:"อันตรายสูง",mid:"ปานกลาง",low:"ไม่รุนแรง"};
+
+const SAMPLE = {
+  example:true,
+  summary:"รอยเขี้ยว 2 จุดที่ข้อเท้า บวมแดง ปวดมาก ถูกกัดในสวน ผู้ใช้เห็นงูสีเขียวหางแดง",
+  urgency:"high",
+  candidates:[
+    {name_th:"งูเขียวหางไหม้",name_en:"Green pit viper (Trimeresurus)",likelihood:72,severity:"mid",ref_id:"greenpit",why:"สีเขียวและหางแดงตรงกับที่เล่า รอยเขี้ยว 2 จุดและบวมแดงเข้ากับพิษต่อระบบเลือด"},
+    {name_th:"งูกะปะ",name_en:"Malayan pit viper",likelihood:15,severity:"high",ref_id:"malayanpit",why:"พบในสวนเช่นกันและทำให้บวมมาก แต่สีตัวไม่ตรง"},
+    {name_th:"งูเขียวปากจิ้งจก (ไม่มีพิษ)",name_en:"Oriental whip snake",likelihood:13,severity:"low",why:"ตัวเขียวเหมือนกันแต่มักไม่ทำให้บวมมาก"}
+  ],
+  red_flags:["เลือดออกตามไรฟันหรือแผลไม่หยุด","บวมลามเกินข้อพับ","ปัสสาวะสีเข้ม"],
+  do:["ให้ผู้ป่วยอยู่นิ่ง ดามขาข้างที่โดนกัด","ถอดแหวน กำไล รองเท้าที่รัด","จดเวลาที่โดนกัด","ไปโรงพยาบาลเพื่อตรวจการแข็งตัวของเลือด"],
+  dont:["ห้ามขันชะเนาะ","ห้ามกรีดหรือดูดแผล","ห้ามประคบน้ำแข็ง","ห้ามดื่มแอลกอฮอล์"],
+  doctor_note:"ถูกงูกัดที่ข้อเท้าซ้าย ในสวน ประมาณ 30 นาที–2 ชั่วโมงก่อน\nผู้ป่วยเห็นงูสีเขียวหางแดง สงสัยงูเขียวหางไหม้\nอาการ: รอยเขี้ยว 2 จุด ปวดมาก บวมแดง\nยังไม่มีเลือดออกผิดปกติหรืออาการทางระบบประสาท"
+};
+
+/* ---------- icons ---------- */
+const SVG = b => `<svg viewBox="0 0 64 64" aria-hidden="true">${b}</svg>`;
+const IC = {
+  cam: SVG(`<rect class="fs" x="8" y="18" width="48" height="34" rx="7"/><rect class="s" x="8" y="18" width="48" height="34" rx="7"/><path class="s" d="M23 18l4-6h10l4 6"/><circle class="fc" cx="32" cy="35" r="11"/><circle class="s" cx="32" cy="35" r="11"/><path class="s" d="M32 30v10M27 35h10" style="stroke:var(--pink)"/><circle class="fi" cx="48" cy="25" r="2"/>`),
+  wound: SVG(`<g transform="rotate(-35 32 32)"><rect class="fy" x="6" y="22" width="52" height="20" rx="10"/><rect class="fp" x="22" y="22" width="20" height="20"/><rect class="s" x="6" y="22" width="52" height="20" rx="10"/><path class="s" d="M22 22v20M42 22v20"/><circle class="fi" cx="13" cy="32" r="1.6"/><circle class="fi" cx="51" cy="32" r="1.6"/></g>`),
+  snake: SVG(`<path d="M12 52c12 0 18-5 18-11s-12-7-12-14 6-12 18-12" fill="none" style="stroke:var(--mint)" stroke-width="10" stroke-linecap="round"/><path class="s" d="M12 52c12 0 18-5 18-11s-12-7-12-14 6-12 18-12"/><ellipse class="fm" cx="43" cy="15" rx="9" ry="7"/><ellipse class="s" cx="43" cy="15" rx="9" ry="7"/><circle class="fi" cx="45" cy="13" r="1.8"/><path d="M52 16l6 0M58 16l2-3M58 16l2 3" fill="none" style="stroke:var(--pink)" stroke-width="2.4" stroke-linecap="round"/>`),
+  chat: SVG(`<rect class="fl" x="8" y="10" width="40" height="30" rx="8"/><path class="s" d="M16 40l-4 10 12-10"/><rect class="s" x="8" y="10" width="40" height="30" rx="8"/><path class="s" d="M17 21h22M17 29h14"/><circle class="fy" cx="48" cy="44" r="10"/><circle class="s" cx="48" cy="44" r="10"/><path class="s" d="M48 39v6M48 49v.5"/>`),
+  book: SVG(`<path class="fy" d="M32 16c-6-4-14-5-22-4v36c8-1 16 0 22 4z"/><path class="fs" d="M32 16c6-4 14-5 22-4v36c-8-1-16 0-22 4z"/><path class="s" d="M32 16c-6-4-14-5-22-4v36c8-1 16 0 22 4c6-4 14-5 22-4V12c-8-1-16 0-22 4zM32 16v36"/><path class="s" d="M16 22h9M16 29h9M39 22h9M39 29h9"/>`),
+  clip: SVG(`<rect class="fl" x="14" y="10" width="34" height="46" rx="5"/><rect class="s" x="14" y="10" width="34" height="46" rx="5"/><rect class="fy" x="23" y="6" width="16" height="8" rx="3"/><rect class="s" x="23" y="6" width="16" height="8" rx="3"/><path class="s" d="M21 24h20M21 31h14"/><circle class="fs" cx="31" cy="44" r="6"/><circle class="s" cx="31" cy="44" r="6"/><path d="M48 40l8-8" style="stroke:var(--pink)" stroke-width="5" stroke-linecap="round"/>`),
+  phone: SVG(`<rect class="fy" x="6" y="14" width="40" height="30" rx="4"/><path class="s" d="M6 18l20 14 20-14"/><rect class="s" x="6" y="14" width="40" height="30" rx="4"/><circle class="fc" cx="45" cy="42" r="13"/><circle class="s" cx="45" cy="42" r="13"/><path d="M40 37h3l1 4-2 1a7 7 0 0 0 3 3l1-2 4 1v3a2 2 0 0 1-2 2 12 12 0 0 1-10-10 2 2 0 0 1 2-2" fill="none" style="stroke:var(--pink)" stroke-width="2.2" stroke-linejoin="round"/>`),
+  bee: SVG(`<ellipse class="fs" cx="24" cy="20" rx="10" ry="8" opacity=".85"/><ellipse class="fs" cx="40" cy="20" rx="10" ry="8" opacity=".85"/><ellipse class="s" cx="24" cy="20" rx="10" ry="8"/><ellipse class="s" cx="40" cy="20" rx="10" ry="8"/><ellipse class="fy" cx="32" cy="38" rx="14" ry="16"/><path class="s" d="M19 33h26M18 41h28"/><ellipse class="s" cx="32" cy="38" rx="14" ry="16"/><path class="s" d="M32 54v6"/>`),
+  centipede: SVG(`${[0,1,2,3,4].map(i=>`<path class="s" d="M${14+i*9} ${30+(i%2?4:0)}l-5 -9M${14+i*9} ${30+(i%2?4:0)}l-5 9"/>`).join("")}${[0,1,2,3,4].map(i=>`<circle class="${i===4?"fp":"fy"}" cx="${16+i*9}" cy="${30+(i%2?4:0)}" r="6"/><circle class="s" cx="${16+i*9}" cy="${30+(i%2?4:0)}" r="6"/>`).join("")}<path class="s" d="M56 28l4-6M56 28l5 1"/>`),
+  jelly: SVG(`<path class="fp" d="M12 32a20 18 0 0 1 40 0z"/><path class="s" d="M12 32a20 18 0 0 1 40 0z"/><path class="s" d="M18 32c0 8-4 10-2 18M28 32c0 10 4 12 2 22M38 32c0 8-4 12-2 20M46 32c0 6 4 10 2 16"/><circle class="fc" cx="26" cy="22" r="2.5"/>`),
+  fish: SVG(`<path class="fs" d="M8 32c8-12 26-14 38-4l10-8v24l-10-8C34 46 16 44 8 32z"/><path class="s" d="M8 32c8-12 26-14 38-4l10-8v24l-10-8C34 46 16 44 8 32z"/><path class="s" d="M20 22l4-10 4 9M30 20l5-9 3 10" style="stroke:var(--pink)"/><circle class="fi" cx="17" cy="30" r="2"/>`),
+  paw: SVG(`<ellipse class="fm" cx="32" cy="42" rx="13" ry="11"/><ellipse class="s" cx="32" cy="42" rx="13" ry="11"/>${[[16,26],[26,16],[38,16],[48,26]].map(([x,y])=>`<circle class="fy" cx="${x}" cy="${y}" r="6"/><circle class="s" cx="${x}" cy="${y}" r="6"/>`).join("")}`),
+};
+const FISH_IDS = ["stonefish","lionfish","catfish","stingray","puffer"];
+function iconFor(item){
+  if(!item) return IC.paw;
+  if(item.g==="งู") return IC.snake;
+  if(item.g==="แมลง") return IC.bee;
+  if(item.g==="แมงและตะขาบ") return IC.centipede;
+  if(item.g==="สัตว์ทะเล") return FISH_IDS.includes(item.id) ? IC.fish : IC.jelly;
+  return IC.paw;
+}
+document.querySelectorAll(".ico[data-ic]").forEach(el=>{ el.innerHTML = IC[el.dataset.ic]; });
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const files = {wound:null, animal:null};
+let sample = null, imgCaps = null, ctl = null, lastResult = SAMPLE;
+
+/* ---------- navigation ---------- */
+const VIEWS = ["home","check","result","guide"];
+function go(v){
+  VIEWS.forEach(n => $("#v-"+n).hidden = n!==v);
+  document.querySelectorAll(".tabbar .tab").forEach(t => t.dataset.go===v ? t.setAttribute("aria-current","page") : t.removeAttribute("aria-current"));
+  window.scrollTo(0,0);
+}
+document.addEventListener("click", e=>{
+  const g = e.target.closest("[data-go]"); if(g){ go(g.dataset.go); return; }
+  const o = e.target.closest("[data-open]"); if(o){ openSheet("sh-"+o.dataset.open); return; }
+  const c = e.target.closest("[data-copy]"); if(c){ copyText(c.dataset.copy, c); return; }
+  const d = e.target.closest("[data-guide]"); if(d){ openDetail(d.dataset.guide); return; }
+  if(e.target.closest("[data-close]") || e.target.classList.contains("scrim")) closeSheets();
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheets(); });
+
+let lastFocus = null;
+function openSheet(id){ lastFocus = document.activeElement; const s=$("#"+id); s.hidden=false; (s.querySelector("[data-close]")||s.querySelector("button"))?.focus(); }
+function closeSheets(){ document.querySelectorAll(".scrim").forEach(s=>s.hidden=true); lastFocus?.focus?.(); }
+
+async function copyText(t, btn){
+  try{ await navigator.clipboard.writeText(t); const o=btn.textContent; btn.textContent="คัดลอกแล้ว"; setTimeout(()=>btn.textContent=o,1500); }
+  catch{ btn.textContent = t; }
+}
+
+/* ---------- home tiles ---------- */
+const TILES = [
+  {ic:"cam",  t:"ถ่ายรูปแผล",     run:()=>{ go("check"); $("#f-wound").click(); }},
+  {ic:"snake",t:"ถ่ายรูปสัตว์",    run:()=>{ go("check"); $("#f-animal").click(); }},
+  {ic:"chat", t:"เล่าอาการ",       run:()=>{ go("check"); $("#desc").focus(); }},
+  {ic:"book", t:"คู่มือสัตว์มีพิษ", run:()=>go("guide")},
+  {ic:"clip", t:"ผลล่าสุด",        run:()=>go("result")},
+  {ic:"phone",t:"เบอร์ฉุกเฉิน",     run:()=>openSheet("sh-sos"), cls:"sos"},
+];
+$("#tiles").innerHTML = TILES.map((x,i)=>`<button type="button" class="tile ${x.cls||""}" data-tile="${i}">${IC[x.ic]}<span>${esc(x.t)}</span></button>`).join("");
+$("#tiles").addEventListener("click", e=>{ const b=e.target.closest("[data-tile]"); if(b) TILES[+b.dataset.tile].run(); });
+
+/* ---------- check form ---------- */
+$("#symptoms").innerHTML = SYMPTOMS.map(([t,d],i)=>
+  `<label class="chip${d?" danger":""}"><input type="checkbox" id="sym-${i}" value="${esc(t)}" data-d="${d}"><span>${esc(t)}</span></label>`).join("");
+const picked = () => [...document.querySelectorAll("#symptoms input:checked")];
+function updateFlag(){ $("#redflag").hidden = !picked().some(i=>i.dataset.d==="1"); }
+$("#symptoms").addEventListener("change", updateFlag);
+
+function bindShot(key){
+  const box = $("#shot-"+key), inp = $("#f-"+key);
+  inp.addEventListener("change", ()=>{
+    const f = inp.files && inp.files[0]; if(!f) return;
+    files[key] = f;
+    box.querySelectorAll("img,.x").forEach(n=>n.remove());
+    const img = document.createElement("img"); img.alt = ""; img.src = URL.createObjectURL(f);
+    const x = document.createElement("button"); x.type="button"; x.className="x"; x.textContent="✕"; x.setAttribute("aria-label","ลบรูป");
+    x.addEventListener("click", e=>{ e.preventDefault(); e.stopPropagation(); files[key]=null; inp.value=""; img.remove(); x.remove(); });
+    box.append(img, x);
+  });
+}
+bindShot("wound"); bindShot("animal");
+
+$("#reset").addEventListener("click", ()=>{
+  ctl?.abort();
+  $("#desc").value=""; $("#when").value=""; $("#where").value="";
+  document.querySelectorAll("#symptoms input").forEach(i=>i.checked=false); updateFlag();
+  ["wound","animal"].forEach(k=>{ files[k]=null; $("#f-"+k).value=""; document.querySelectorAll(`#shot-${k} img,#shot-${k} .x`).forEach(n=>n.remove()); });
+  $("#status").textContent="";
+});
+
+/* ---------- result ---------- */
+const URG = {high:["ควรไปโรงพยาบาลทันที","โทร 1669 ถ้ามีอาการอันตราย"],mid:["ควรพบแพทย์ภายในวันนี้","เฝ้าดูอาการระหว่างเดินทาง"],low:["ดูแลเองได้","ถ้าอาการแย่ลงให้พบแพทย์"]};
+function render(r){
+  const u = URG[r.urgency] ? r.urgency : "mid";
+  const li = a => (a||[]).map(x=>`<li>${esc(x)}</li>`).join("");
+  const cands = (r.candidates||[]).slice(0,4).map(c=>{
+    const s = ["high","mid","low"].includes(c.severity)?c.severity:"mid";
+    const p = Math.max(0,Math.min(100,Math.round(Number(c.likelihood)||0)));
+    const g = GUIDE.find(x=>x.id===c.ref_id);
+    const tag = g ? `button type="button" data-guide="${esc(g.id)}"` : `div`;
+    return `<${tag} class="item">
+      <span class="ava">${iconFor(g)}</span>
+      <span class="nm">${esc(c.name_th)}</span>
+      <span class="badge ${s}">${SEV_TH[s]}</span>
+      <span class="meta"><span class="pct">ความเป็นไปได้ ${p}%</span><br>${esc(c.why)}</span>
+      <span class="meter"><i style="width:${p}%"></i></span>
+    </${g?"button":"div"}>`;
+  }).join("");
+  const note = r.doctor_note || "";
+  $("#result").innerHTML = `
+    ${r.example?'<span class="ex">ผลตัวอย่าง ยังไม่ใช่ผลของคุณ</span>':""}
+    <div class="urg ${u}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg><div>${URG[u][0]}<small>${URG[u][1]}</small></div></div>
+    ${r.summary?`<div class="card"><p>${esc(r.summary)}</p></div>`:""}
+    <h3 style="font-size:16px;margin-top:4px">สิ่งที่น่าจะกัด</h3>
+    <div class="list">${cands||'<div class="card"><p class="hint">ข้อมูลยังไม่พอ ลองเพิ่มรูปหรือรายละเอียด</p></div>'}</div>
+    <details class="acc do" open><summary>ควรทำ<span class="chev">⌄</span></summary><ul>${li(r.do)}</ul></details>
+    <details class="acc dont" open><summary>ห้ามทำ<span class="chev">⌄</span></summary><ul>${li(r.dont)}</ul></details>
+    ${(r.red_flags||[]).length?`<details class="acc flags"><summary>อาการที่ต้องรีบไปโรงพยาบาล<span class="chev">⌄</span></summary><ul>${li(r.red_flags)}</ul></details>`:""}
+    <div class="card">
+      <div class="card-h"><span class="num" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 3v6a5 5 0 0 0 10 0V3M11 14v2a4 4 0 0 0 8 0v-3"/><circle cx="19" cy="11" r="2"/></svg></span><h3>สรุปสำหรับแสดงหมอ</h3></div>
+      <div class="doc">${esc(note)}</div>
+      <button type="button" class="small-btn" data-copy="${esc(note)}">คัดลอกสรุป</button>
+    </div>
+    <button type="button" class="cta" data-go="check">ตรวจใหม่</button>
+    <p class="disc">ผลนี้เป็นการคาดการณ์จาก AI ไม่ใช่การวินิจฉัย ถ้าไม่แน่ใจให้ถือว่าเป็นสัตว์มีพิษไว้ก่อน</p>`;
+}
+render(SAMPLE);
+
+/* ---------- AI ---------- */
+const PROMPT = (d)=>`คุณเป็นผู้ช่วยปฐมพยาบาลด้านพิษวิทยาจากสัตว์ในประเทศไทย ประเมินว่าผู้ใช้น่าจะโดนสัตว์หรือแมลงชนิดใดกัด ต่อย หรือสัมผัส จากรูปที่แนบ (ถ้ามี) และข้อมูลด้านล่าง
+รูปที่แนบ: ${d.imgs || "ไม่มี"}
+คำบอกเล่า: ${d.desc || "-"}
+เวลาตั้งแต่โดนกัด: ${d.when || "ไม่ระบุ"}
+สถานที่: ${d.where || "ไม่ระบุ"}
+อาการ: ${d.sym || "ไม่ระบุ"}
+
+ฐานข้อมูลอ้างอิงสัตว์มีพิษในไทย (id: ชื่อ — ลักษณะ — อาการ):
+${GUIDE.map(g=>`${g.id}: ${g.th} (${g.sci}) — ${g.look} — ${g.sign}`).join("\n")}
+ถ้าผู้สมัครตรงกับรายการข้างบน ให้ใส่ ref_id เป็น id นั้น ถ้าไม่ตรงให้ใส่ ref_id เป็น ""
+
+กติกา: ใช้ภาษาไทยที่เข้าใจง่าย ให้ผู้สมัคร 1-4 ชนิด เรียงจากน่าจะเป็นที่สุด likelihood รวมกันประมาณ 100 why สั้นไม่เกิน 1 ประโยค ถ้าข้อมูลไม่พอให้บอกตรงๆ ถ้าอาจเป็นงูพิษให้ urgency เป็น "high" เสมอ แนวทางปฐมพยาบาลต้องตรงตามหลักปัจจุบัน (เช่น ห้ามขันชะเนาะ ห้ามกรีดดูดแผล) ข้อละสั้นๆ doctor_note 3-6 บรรทัดที่ผู้ป่วยยื่นให้แพทย์ได้ ระบุตำแหน่ง เวลา ลักษณะสัตว์ อาการ
+ตอบเป็น JSON เท่านั้นตามรูปแบบนี้:
+{"summary":string,"urgency":"high"|"mid"|"low","candidates":[{"name_th":string,"name_en":string,"likelihood":number,"severity":"high"|"mid"|"low","why":string,"ref_id":string}],"red_flags":[string],"do":[string],"dont":[string],"doctor_note":string}`;
+
+const ERR = {
+  not_granted:"ยังไม่ได้อนุญาตให้ใช้ AI ดูคำแนะนำได้ในคู่มือสัตว์มีพิษ",
+  sampling_disabled:"บัญชีนี้ใช้ AI ไม่ได้ ดูคำแนะนำได้ในคู่มือสัตว์มีพิษ",
+  rate_limited:"ใช้งานถี่เกินไป รอสักครู่แล้วลองใหม่",
+  image_rejected:"รูปนี้ใช้ไม่ได้ ลองเลือกรูป JPG หรือ PNG ที่เล็กลง",
+  images_unavailable:"ส่งรูปไม่ได้ในตอนนี้ ลองพิมพ์อธิบายแทน",
+  invalid_json:"AI ตอบกลับไม่ครบ กดวิเคราะห์อีกครั้ง",
+  refused:"AI ตอบข้อมูลนี้ไม่ได้ ลองปรับคำอธิบาย",
+  session_expired:"กรุณาเข้าสู่ระบบใหม่",
+};
+
+(async ()=>{
+  try{
+    sample = await window.claude?.use?.("sample");
+    if(sample) imgCaps = (await sample.limits().catch(()=>null))?.images || null;
+  }catch{ sample = null; }
+  if(!sample){ $("#analyze").disabled = true; $("#status").textContent = "AI ใช้งานไม่ได้ในหน้านี้ ดูการปฐมพยาบาลได้ในคู่มือสัตว์มีพิษ"; }
+})();
+
+$("#analyze").addEventListener("click", async ()=>{
+  if(!sample) return;
+  const desc = $("#desc").value.trim();
+  const imgs = [], names = [];
+  if(files.wound){ imgs.push(files.wound); names.push("รูปที่ 1: แผล"); }
+  if(files.animal){ imgs.push(files.animal); names.push(`รูปที่ ${imgs.length}: สัตว์ที่กัด`); }
+  const sym = picked().map(i=>i.value).join(", ");
+  if(!desc && !imgs.length && !sym){ $("#status").textContent = "ใส่รูป คำอธิบาย หรือเลือกอาการอย่างน้อยหนึ่งอย่าง"; return; }
+  const sendImgs = imgCaps ? imgs.slice(0, imgCaps.maxCount) : [];
+  ctl?.abort(); ctl = new AbortController();
+  const btn = $("#analyze"), label = btn.lastChild.textContent;
+  btn.disabled = true; btn.lastChild.textContent = "กำลังวิเคราะห์…";
+  $("#status").textContent = "AI กำลังวิเคราะห์ อาจใช้เวลา 10–60 วินาที";
+  try{
+    const r = await sample.json(PROMPT({desc, when:$("#when").value, where:$("#where").value, sym, imgs:sendImgs.length?names.slice(0,sendImgs.length).join(", "):""}),
+      {signal:ctl.signal, ...(sendImgs.length?{images:sendImgs}:{})});
+    if(!r || typeof r!=="object") throw {code:"invalid_json"};
+    lastResult = r; render(r);
+    $("#status").textContent = "";
+    go("result");
+  }catch(e){
+    if(e?.code!=="cancelled") $("#status").textContent = ERR[e?.code] || "เชื่อมต่อ AI ไม่สำเร็จ ลองอีกครั้ง";
+    if(e?.code==="not_granted"||e?.code==="sampling_disabled") btn.hidden = true;
+  }finally{ btn.disabled = false; btn.lastChild.textContent = label; }
+});
+
+/* ---------- guide ---------- */
+const groups = ["ทั้งหมด", ...new Set(GUIDE.map(x=>x.g))];
+let gsel = "ทั้งหมด";
+$("#gfilter").innerHTML = groups.map((g,i)=>`<label class="chip"><input type="radio" name="gf" id="gf-${i}" value="${esc(g)}" ${i===0?"checked":""}><span>${esc(g)}</span></label>`).join("");
+$("#gfilter").addEventListener("change", e=>{ gsel = e.target.value; drawGuide(); });
+$("#q").addEventListener("input", drawGuide);
+function drawGuide(){
+  const q = $("#q").value.trim().toLowerCase();
+  const rows = GUIDE.filter(x=>(gsel==="ทั้งหมด"||x.g===gsel) && (!q || [x.th,x.en,x.sci,x.look].join(" ").toLowerCase().includes(q)));
+  $("#guide").innerHTML = rows.length ? rows.map(x=>`
+    <button type="button" class="item" data-guide="${x.id}">
+      <span class="ava">${iconFor(x)}</span>
+      <span class="nm">${esc(x.th)}</span>
+      <span class="badge ${x.s}">${SEV_TH[x.s]}</span>
+      <span class="meta">${esc(x.how)}, ${esc(x.k)}</span>
+    </button>`).join("") : `<div class="card"><p class="hint">ไม่พบ "${esc(q)}" ลองค้นด้วยชื่ออื่น</p></div>`;
+}
+drawGuide();
+
+function openDetail(id){
+  const x = GUIDE.find(g=>g.id===id); if(!x) return;
+  $("#detail").innerHTML = `
+    <div class="grab"></div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span class="ava" style="width:64px;height:64px;border-radius:18px;background:var(--card);display:grid;place-items:center;flex:none">${iconFor(x)}</span>
+      <div style="min-width:0"><h2 id="d-title">${esc(x.th)}</h2><p class="hint">${esc(x.en)}</p><p class="hint"><i>${esc(x.sci)}</i></p></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ${x.s}">${SEV_TH[x.s]}</span><span class="badge" style="background:var(--card)">${esc(x.how)}</span><span class="badge" style="background:var(--card)">${esc(x.k)}</span></div>
+    <div class="card">
+      <div class="kv"><b>ลักษณะ</b><span>${esc(x.look)}</span></div>
+      <div class="kv"><b>อาการ</b><span>${esc(x.sign)}</span></div>
+    </div>
+    <details class="acc do" open><summary>ปฐมพยาบาล<span class="chev">⌄</span></summary><ul><li>${esc(x.aid)}</li></ul></details>
+    <div class="sources">อ้างอิง: <a href="${WIKI(x.wiki)}" target="_blank" rel="noopener">วิกิพีเดีย</a>${x.src.map(k=>` · <a href="${SRC[k].u}" target="_blank" rel="noopener">${esc(SRC[k].t.split(":")[0])}</a>`).join("")}</div>
+    <button type="button" class="small-btn" data-close style="align-self:stretch">ปิด</button>`;
+  openSheet("sh-detail");
+}
+
+$("#srclist").innerHTML =
+  `<li><a href="${WIKI("หมวดหมู่:สัตว์มีพิษ")}" target="_blank" rel="noopener">วิกิพีเดีย: หมวดหมู่สัตว์มีพิษ</a></li>` +
+  Object.values(SRC).map(s=>`<li><a href="${s.u}" target="_blank" rel="noopener">${esc(s.t)}</a></li>`).join("");
+</script>
