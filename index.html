@@ -113,6 +113,18 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .cta:disabled{opacity:.6;cursor:wait}
 .ghost{border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px;align-self:center}
 .status{font-size:14px;color:var(--muted);text-align:center}
+.pick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick-w{position:relative;min-width:0}
+.pick{display:block;width:100%;border:2px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);padding:0;cursor:pointer;text-align:left;position:relative}
+.pick img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.pick .pn{display:block;font-size:12px;font-weight:500;padding:5px 8px 7px;line-height:1.3;overflow-wrap:anywhere}
+.pick .pn b{color:var(--good);font-weight:600}
+.pick[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 3px var(--sky)}
+.pick .tick{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:14px;font-weight:700;display:none;place-items:center}
+.pick[aria-pressed="true"] .tick{display:grid}
+.nope{position:absolute;top:6px;right:6px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:13px}
+.seen-line{font-size:14px;margin:0}
+.seen-box{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:var(--panel);border-radius:14px;padding:10px 12px;font-size:14px}
 
 /* urgency banner (like the Nearby Location bar) */
 .urg{border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;color:#fff;font-weight:600}
@@ -259,7 +271,14 @@ a{color:var(--brand)}
         </div>
       </div>
       <div class="card">
-        <div class="card-h"><span class="num">3</span><h3>อาการตอนนี้</h3></div>
+        <div class="card-h"><span class="num">3</span><h3>ตัวไหนที่คุณเห็น?</h3></div>
+        <p class="hint" id="pick-hint"></p>
+        <div class="pick-grid" id="picks"></div>
+        <p class="seen-line" id="seen-line" hidden>เลือกแล้ว: <b id="seen-name"></b> <button type="button" class="linkbtn" id="clear-seen">ล้างที่เลือก</button></p>
+        <button type="button" class="linkbtn" id="more-picks" style="align-self:flex-start"></button>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="num">4</span><h3>อาการตอนนี้</h3></div>
         <p class="hint">เลือกได้หลายข้อ กรอบสีแดงคืออาการอันตราย</p>
         <div class="chips" id="symptoms"></div>
       </div>
@@ -450,6 +469,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const files = {wound:null, animal:null};
 let sample = null, imgCaps = null, ctl = null, lastResult = SAMPLE;
+let seen = null, showAllPicks = false; const notThese = new Set();
 
 /* ---------- navigation ---------- */
 const VIEWS = ["home","check","result","guide"];
@@ -515,7 +535,69 @@ $("#reset").addEventListener("click", ()=>{
   document.querySelectorAll("#symptoms input").forEach(i=>i.checked=false); updateFlag();
   ["wound","animal"].forEach(k=>{ files[k]=null; $("#f-"+k).value=""; document.querySelectorAll(`#shot-${k} img,#shot-${k} .x`).forEach(n=>n.remove()); });
   $("#status").textContent="";
+  seen = null; showAllPicks = false; notThese.clear(); drawPicks(); render(lastResult);
 });
+
+/* ---------- visual matching ---------- */
+const KW = {
+  cobra:["งูเห่า","แม่เบี้ย","แผ่คอ","พังพาน","ดอกจัน","ชูคอ"], spitting:["พ่น","เข้าตา","แม่เบี้ย","งูเห่า"],
+  king:["จงอาง","ตัวใหญ่","ยาวมาก","ชูคอสูง"], banded:["ดำเหลือง","เหลืองดำ","ปล้องเหลือง","สามเหลี่ยม"],
+  krait:["ดำขาว","ขาวดำ","ปล้องขาว","ทับสมิงคลา","กลางคืน","ที่นอน"], malayanpit:["กะปะ","ใบไม้","ลายสามเหลี่ยม","หัวสามเหลี่ยม","สวนยาง","น้ำตาลแดง"],
+  russell:["แมวเซา","ลายวง","ขู่","ฟ่อ","ไร่","จุดวงรี"], greenpit:["เขียว","หางแดง","หางไหม้","หัวสามเหลี่ยม","ต้นไม้","กิ่ง"],
+  seasnake:["งูทะเล","หางแบน","ว่ายน้ำ","ปากแม่น้ำ"], bee:["ผึ้ง","ต่อ","แตน","เหล็กใน","รัง","บิน"],
+  rove:["ด้วง","ก้นกระดก","ผื่นเป็นทาง","ไหม้","เล่นไฟ","ส้มดำ"], centipede:["ตะขาบ","ขาเยอะ","ขี้เข็บ","จักขาบ"],
+  scorpion:["แมงป่อง","ก้าม","หางงอน"], boxjelly:["แมงกะพรุน","ใส","หนวด","รอยเส้น","สาหร่าย"],
+  firejelly:["แมงกะพรุน","แมงกะพรุนไฟ","ตำแยทะเล","สีส้ม"], stonefish:["เหยียบ","หิน","ปะการัง"], lionfish:["ปลาสิงโต","ครีบยาว","ลายแดงขาว"],
+  catfish:["ปลาดุก","หนวด","เงี่ยง"], stingray:["กระเบน","ทราย","แทง"], octopus:["หมึก","วงฟ้า","วงน้ำเงิน","วงแหวน"],
+  cone:["หอย","เปลือก","กรวย"], puffer:["ปักเป้า","กินปลา","ชาปาก","ปลาพอง"], toad:["คางคก","ยางขาว","กบ"], loris:["ลิง","นางอาย","ลิงลม"]
+};
+const WHERE_BOOST = {"ในบ้าน/ที่นอน":["krait","centipede","scorpion","rove","cobra"],"สวน/ไร่/นา":["malayanpit","greenpit","russell","cobra","bee"],"ป่า/ภูเขา":["king","greenpit","scorpion","centipede","malayanpit"],"ทะเล/ชายหาด":["seasnake","boxjelly","firejelly","stonefish","lionfish","catfish","stingray","octopus","cone"],"แหล่งน้ำจืด":["banded","cobra"],"ในเมือง/ถนน":["cobra","centipede","toad","bee"]};
+const NEURO = ["cobra","spitting","king","banded","krait","seasnake","octopus","cone","puffer"], HEMO = ["malayanpit","russell","greenpit"];
+const DEFAULT_PICKS = ["cobra","malayanpit","greenpit","centipede","scorpion","bee"];
+const shortName = g => g.th.replace(/ \(.*\)/,"");
+function matchScores(){
+  const t = $("#desc").value.toLowerCase(), w = $("#where").value, sym = picked().map(i=>i.value).join(" ");
+  const sc = {};
+  GUIDE.forEach(g=>{ let s=0;
+    (KW[g.id]||[]).forEach(k=>{ if(t.includes(k)) s+=2; });
+    if(t.includes(shortName(g))) s+=3;
+    if(t.includes("งู")) s += g.g==="งู" ? 1 : -3;
+    if(g.g==="สัตว์ทะเล" && /ปลา|ทะเล/.test(t)) s+=1;
+    if(g.g==="แมลง" && /แมลง|บิน/.test(t)) s+=1;
+    if((WHERE_BOOST[w]||[]).includes(g.id)) s+=1;
+    if(/หนังตาตก|กลืนลำบาก|หายใจลำบาก|ชา/.test(sym) && NEURO.includes(g.id)) s+=1;
+    if(/เลือดออก|ปัสสาวะสีเข้ม/.test(sym) && HEMO.includes(g.id)) s+=1;
+    sc[g.id] = s; });
+  return sc;
+}
+function pickTile(id, o={}){
+  const g = GUIDE.find(x=>x.id===id);
+  return `<div class="pick-w"><button type="button" class="pick" data-seen="${id}" aria-pressed="${seen===id}"><img src="${PHOTOS[id].src}" alt="" loading="lazy"><span class="tick" aria-hidden="true">✓</span><span class="pn">${esc(shortName(g))}${o.pct!=null?` <b>${o.pct}%</b>`:""}</span></button>${o.nope?`<button type="button" class="nope" data-nope="${id}" aria-label="ไม่ใช่${esc(shortName(g))}">✕</button>`:""}</div>`;
+}
+function drawPicks(){
+  const sc = matchScores(), any = Object.values(sc).some(v=>v>0);
+  let ids = any ? GUIDE.map(g=>g.id).filter(id=>sc[id]>0).sort((a,b)=>sc[b]-sc[a]) : DEFAULT_PICKS.slice();
+  ids = showAllPicks ? [...ids, ...GUIDE.map(g=>g.id).filter(id=>!ids.includes(id))] : ids.slice(0,6);
+  if(seen && !ids.includes(seen)) ids.unshift(seen);
+  $("#pick-hint").textContent = any ? "เรียงจากที่ตรงกับคำบอกเล่ามากที่สุด แตะตัวที่คล้ายกับที่เห็น" : "แตะตัวที่คล้ายกับที่เห็น ถ้าไม่ได้เห็นตัวหรือไม่แน่ใจ ข้ามได้";
+  $("#picks").innerHTML = ids.map(id=>pickTile(id)).join("");
+  $("#more-picks").textContent = showAllPicks ? "แสดงน้อยลง" : "แสดงทั้งหมด 24 ชนิด";
+  $("#seen-line").hidden = !seen;
+  if(seen) $("#seen-name").textContent = shortName(GUIDE.find(g=>g.id===seen));
+}
+$("#desc").addEventListener("input", drawPicks);
+$("#where").addEventListener("change", drawPicks);
+$("#symptoms").addEventListener("change", drawPicks);
+$("#more-picks").addEventListener("click", ()=>{ showAllPicks = !showAllPicks; drawPicks(); });
+$("#clear-seen").addEventListener("click", ()=>{ seen = null; drawPicks(); render(lastResult); });
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-seen]");
+  if(b){ const id = b.dataset.seen; seen = seen===id ? null : id; notThese.delete(id); drawPicks(); render(lastResult); return; }
+  const n = e.target.closest("[data-nope]");
+  if(n){ notThese.add(n.dataset.nope); if(seen===n.dataset.nope) seen = null; drawPicks(); render(lastResult); return; }
+  if(e.target.closest("#reanalyze")) runAnalysis();
+});
+drawPicks();
 
 /* ---------- result ---------- */
 const URG = {high:["ควรไปโรงพยาบาลทันที","โทร 1669 ถ้ามีอาการอันตราย"],mid:["ควรพบแพทย์ภายในวันนี้","เฝ้าดูอาการระหว่างเดินทาง"],low:["ดูแลเองได้","ถ้าอาการแย่ลงให้พบแพทย์"]};
@@ -535,11 +617,27 @@ function render(r){
       <span class="meter"><i style="width:${p}%"></i></span>
     </${g?"button":"div"}>`;
   }).join("");
-  const note = r.doctor_note || "";
+  const cIds = (r.candidates||[]).map(c=>c.ref_id).filter(id=>PHOTOS[id] && !notThese.has(id));
+  const top = GUIDE.find(g=>g.id===cIds[0]);
+  const look = top ? GUIDE.filter(g=>g.g===top.g && !cIds.includes(g.id) && !notThese.has(g.id)).map(g=>g.id) : [];
+  let cmp = [...new Set([...cIds, ...look])].slice(0,6);
+  if(seen && !cmp.includes(seen)) cmp = [seen, ...cmp.slice(0,5)];
+  const pctOf = id => { const c = (r.candidates||[]).find(c=>c.ref_id===id); return c ? Math.max(0,Math.min(100,Math.round(Number(c.likelihood)||0))) : null; };
+  const sg = seen && GUIDE.find(g=>g.id===seen);
+  const compare = cmp.length ? `<div class="card">
+      <div class="card-h"><h3>เทียบกับภาพ: ตัวไหนที่คุณเจอ?</h3></div>
+      <p class="hint">แตะตัวที่คล้ายที่สุด กด ✕ ที่ตัวที่มั่นใจว่าไม่ใช่</p>
+      <div class="pick-grid">${cmp.map(id=>pickTile(id,{pct:pctOf(id),nope:true})).join("")}</div>
+      ${sg?`<div class="seen-box"><span>คุณเลือก <b>${esc(shortName(sg))}</b></span><button type="button" class="linkbtn" data-guide="${sg.id}">ดูวิธีปฐมพยาบาลของตัวนี้</button></div>`:""}
+      ${notThese.size?`<p class="hint">ตัดออกแล้ว: ${[...notThese].map(id=>esc(shortName(GUIDE.find(g=>g.id===id)))).join(", ")}</p>`:""}
+      ${(sg||notThese.size) && sample ? `<button type="button" class="cta" id="reanalyze">ให้ AI ประเมินใหม่จากที่เลือก</button><p class="status" id="re-status" aria-live="polite"></p>` : ""}
+    </div>` : "";
+  const note = (r.doctor_note || "") + (sg ? `\nผู้ป่วยเทียบภาพแล้วเห็นว่าคล้าย: ${sg.th}` : "") + (notThese.size ? `\nผู้ป่วยเทียบภาพแล้วบอกว่าไม่ใช่: ${[...notThese].map(id=>shortName(GUIDE.find(g=>g.id===id))).join(", ")}` : "");
   $("#result").innerHTML = `
     ${r.example?'<span class="ex">ผลตัวอย่าง ยังไม่ใช่ผลของคุณ</span>':""}
     <div class="urg ${u}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg><div>${URG[u][0]}<small>${URG[u][1]}</small></div></div>
     ${r.summary?`<div class="card"><p>${esc(r.summary)}</p></div>`:""}
+    ${compare}
     <h3 style="font-size:16px;margin-top:4px">สิ่งที่น่าจะกัด</h3>
     <div class="list">${cands||'<div class="card"><p class="hint">ข้อมูลยังไม่พอ ลองเพิ่มรูปหรือรายละเอียด</p></div>'}</div>
     <details class="acc do" open><summary>ควรทำ<span class="chev">⌄</span></summary><ul>${li(r.do)}</ul></details>
@@ -562,10 +660,14 @@ const PROMPT = (d)=>`คุณเป็นผู้ช่วยปฐมพย�
 เวลาตั้งแต่โดนกัด: ${d.when || "ไม่ระบุ"}
 สถานที่: ${d.where || "ไม่ระบุ"}
 อาการ: ${d.sym || "ไม่ระบุ"}
+ผู้ใช้เทียบภาพแล้วเห็นว่าคล้าย: ${d.seen || "ไม่ได้เลือก"}
+ผู้ใช้เทียบภาพแล้วบอกว่าไม่ใช่: ${d.nope || "-"}
 
 ฐานข้อมูลอ้างอิงสัตว์มีพิษในไทย (id: ชื่อ — ลักษณะ — อาการ):
 ${GUIDE.map(g=>`${g.id}: ${g.th} (${g.sci}) — ${g.look} — ${g.sign}`).join("\n")}
 ถ้าผู้สมัครตรงกับรายการข้างบน ให้ใส่ ref_id เป็น id นั้น ถ้าไม่ตรงให้ใส่ ref_id เป็น ""
+
+กติกาเรื่องภาพ: ถ้าผู้ใช้เลือกภาพที่คล้าย ให้น้ำหนักมาก แต่ยังต้องดูว่าสอดคล้องกับอาการและสถานที่ ถ้าขัดกันให้บอกใน summary ตัดชนิดที่ผู้ใช้บอกว่าไม่ใช่ออก เว้นแต่อาการชี้ชัดมาก
 
 กติกา: ใช้ภาษาไทยที่เข้าใจง่าย ให้ผู้สมัคร 1-4 ชนิด เรียงจากน่าจะเป็นที่สุด likelihood รวมกันประมาณ 100 why สั้นไม่เกิน 1 ประโยค ถ้าข้อมูลไม่พอให้บอกตรงๆ ถ้าอาจเป็นงูพิษให้ urgency เป็น "high" เสมอ แนวทางปฐมพยาบาลต้องตรงตามหลักปัจจุบัน (เช่น ห้ามขันชะเนาะ ห้ามกรีดดูดแผล) ข้อละสั้นๆ doctor_note 3-6 บรรทัดที่ผู้ป่วยยื่นให้แพทย์ได้ ระบุตำแหน่ง เวลา ลักษณะสัตว์ อาการ
 ตอบเป็น JSON เท่านั้นตามรูปแบบนี้:
@@ -590,31 +692,36 @@ const ERR = {
   if(!sample){ $("#analyze").disabled = true; $("#status").textContent = "AI ใช้งานไม่ได้ในหน้านี้ ดูการปฐมพยาบาลได้ในคู่มือสัตว์มีพิษ"; }
 })();
 
-$("#analyze").addEventListener("click", async ()=>{
+async function runAnalysis(){
   if(!sample) return;
   const desc = $("#desc").value.trim();
   const imgs = [], names = [];
   if(files.wound){ imgs.push(files.wound); names.push("รูปที่ 1: แผล"); }
   if(files.animal){ imgs.push(files.animal); names.push(`รูปที่ ${imgs.length}: สัตว์ที่กัด`); }
   const sym = picked().map(i=>i.value).join(", ");
-  if(!desc && !imgs.length && !sym){ $("#status").textContent = "ใส่รูป คำอธิบาย หรือเลือกอาการอย่างน้อยหนึ่งอย่าง"; return; }
+  if(!desc && !imgs.length && !sym && !seen){ $("#status").textContent = "ใส่รูป คำอธิบาย หรือเลือกอาการอย่างน้อยหนึ่งอย่าง"; return; }
   const sendImgs = imgCaps ? imgs.slice(0, imgCaps.maxCount) : [];
   ctl?.abort(); ctl = new AbortController();
-  const btn = $("#analyze"), label = btn.lastChild.textContent;
+  const btn = $("#analyze"), label = btn.lastChild.textContent, re = $("#reanalyze");
   btn.disabled = true; btn.lastChild.textContent = "กำลังวิเคราะห์…";
-  $("#status").textContent = "AI กำลังวิเคราะห์ อาจใช้เวลา 10–60 วินาที";
+  if(re){ re.disabled = true; re.textContent = "กำลังประเมินใหม่…"; }
+  const say = t => { $("#status").textContent = t; const rs = $("#re-status"); if(rs) rs.textContent = t; };
+  say("AI กำลังวิเคราะห์ อาจใช้เวลา 10–60 วินาที");
+  const sg = seen && GUIDE.find(g=>g.id===seen);
   try{
-    const r = await sample.json(PROMPT({desc, when:$("#when").value, where:$("#where").value, sym, imgs:sendImgs.length?names.slice(0,sendImgs.length).join(", "):""}),
+    const r = await sample.json(PROMPT({desc, when:$("#when").value, where:$("#where").value, sym, imgs:sendImgs.length?names.slice(0,sendImgs.length).join(", "):"", seen: sg ? `${sg.th} (${sg.id})` : "", nope: [...notThese].map(id=>{ const g=GUIDE.find(x=>x.id===id); return `${g.th} (${id})`; }).join(", ")}),
       {signal:ctl.signal, ...(sendImgs.length?{images:sendImgs}:{})});
     if(!r || typeof r!=="object") throw {code:"invalid_json"};
     lastResult = r; render(r);
     $("#status").textContent = "";
     go("result");
   }catch(e){
-    if(e?.code!=="cancelled") $("#status").textContent = ERR[e?.code] || "เชื่อมต่อ AI ไม่สำเร็จ ลองอีกครั้ง";
+    if(e?.code!=="cancelled") say(ERR[e?.code] || "เชื่อมต่อ AI ไม่สำเร็จ ลองอีกครั้ง");
+    const re2 = $("#reanalyze"); if(re2){ re2.disabled = false; re2.textContent = "ให้ AI ประเมินใหม่จากที่เลือก"; }
     if(e?.code==="not_granted"||e?.code==="sampling_disabled") btn.hidden = true;
   }finally{ btn.disabled = false; btn.lastChild.textContent = label; }
-});
+}
+$("#analyze").addEventListener("click", runAnalysis);
 
 /* ---------- guide ---------- */
 const groups = ["ทั้งหมด", ...new Set(GUIDE.map(x=>x.g))];
